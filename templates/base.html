@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{%block title%}{% endblock%}</title>
+  </head>
+  <body>
+    <main id="content">
+      <!-- Must initialize categories=true, so we can now access the tuple (category, msg) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      <!-- Check if there are messages to display -->
+      {% if messages %}
+      <section class="messages">
+        {% for category, msg in messages %}
+        <p class="{{ category }}">{{ msg }}</p>
+        {% endfor %}
+      </section>
+      {% endif %} 
+      {% endwith %} 
+    </main>
+    
+    {% block content %}
+    
+    {% endblock %}
+  </body>
+</html>
