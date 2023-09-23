@@ -4,5 +4,7 @@
 {%block content %}
 <h1>{{title}}</h1>
 <p>{{inst}}</p>
-<a href="/questions/0"><button>Start Survey</button></a>
+<form action="/set-session" method="POST">
+    <button type="submit" name="start-btn">Start Survey</button>
+</form>
 {% endblock %}

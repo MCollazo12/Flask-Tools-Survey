@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey
 
@@ -9,7 +9,7 @@ app.debug = True
 toolbar = DebugToolbarExtension(app)
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
-responses = []
+
 SURVEY_QUESTIONS = len(satisfaction_survey.questions)
 
 
@@ -20,35 +20,53 @@ def show_survey():
     inst = satisfaction_survey.instructions    
     return render_template('satisfaction_survey.html', title=title, inst=inst)
 
+#Utilize post request to create a session for the user
+@app.route('/set-session', methods=['POST'])
+def handle_session():
+    session['responses'] = []
+    return redirect('/questions/0')
+
 @app.route('/questions/<int:ques_number>')
 def show_questions(ques_number):
-    """Handles"""
+    """Displays the current survey question to be answered"""
+    responses = session['responses']
          
-    if ques_number > len(responses) or ques_number > len(satisfaction_survey.questions):
+    #Handles user trying to skip questions     
+    if len(responses) != ques_number:
         flash('Please answer this question before moving on', 'incorrect_ques')
-        return redirect(f'/questions/{len(responses)}')
+        return redirect(f"/questions/{len(responses)}")
     
+    #User has answered all questions -> Display thank you page
     if len(responses) == SURVEY_QUESTIONS:
         return redirect('/thank-you')
     
     survey_ques = satisfaction_survey.questions[ques_number]
-
     return render_template('questions.html', survey_ques=survey_ques, ques_number=ques_number)
 
 
 @app.route('/answer', methods=['POST'])
 def answer_page():
-    """ Stores user answer in responses list and redirects to next question """
-    ans = request.form.get('choice')
-    responses.append(ans)
+    """ Stores user answer in responses list and redirect to the next question """
     
-    ques_num = int(request.form.get('ques_number'))
-    return redirect(f'/questions/{ques_num + 1}')
+    #Request the user's answer
+    ans = request.form['choice']
+    
+    #Append thier answer to the session
+    responses = session['responses']
+    responses.append(ans)
+    session['responses'] = responses
+    
+    #Check for completed survey else move on to the next question
+    if len(responses) == SURVEY_QUESTIONS:
+        return redirect('/thank-you')
+    else:
+        return redirect(f'/questions/{len(responses)}')
 
 
 @app.route('/thank-you')
 def thank_you_page():
-    return render_template('thank-you.html', responses=responses)
+    """Page to be shown once the user completes the survey"""
+    return render_template('thank-you.html')
 
 
     
